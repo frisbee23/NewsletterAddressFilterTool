@@ -1,0 +1,4 @@
+# NewsletterAddressFilterTool
+
+TODO:
+example dump
