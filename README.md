@@ -12,4 +12,8 @@ for example we have a record-company which links the persons=newsletter address 
 
 there are no routines for consistency, so the lookup tables should be considerd write-once-never-delete.
 
-good luck :D
+if you're planning to use/adapt this, good luck :D
+because this is no way near reusable, adaptable code, i have to admit.
+
+seriously, if this might be for you, i'll try to help, just open an issue or something.
+
