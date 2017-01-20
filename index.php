@@ -18,22 +18,23 @@
         <!--[if lt IE 8]>
             <p class="browserupgrade">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
         <![endif]-->
-    <a href="?">HOME</a>
-    <h1>las vegas records subscriber helper</h1>
 <?php 
-$time_start = microtime(true); 
+require 'auth.php';
 
 require 'vendor/autoload.php';
+require 'nav.php';
 error_reporting (E_ALL);
+$time_start = microtime(true); 
 
 //echo " <pre style='white-space:normal;'>";
 // ------------------------- init -------------------
+require 'config.php';
 $database = new medoo([
     'database_type' => 'mysql',
-    'database_name' => 'vegas',
-    'server' => 'localhost',
-    'username' => 'lasvegasadm',
-    'password' => 'tLO4ovHn2sh3mHQ4v1cn',
+    'database_name' => $config_database_name,
+    'server' => $config_server,
+    'username' => $config_username,
+    'password' => $config_password,
     'charset' => 'utf8'
     ]);
 
@@ -88,15 +89,7 @@ $props=[
 ];
 $categories=array ('band','branche','genre');
 
-//echo "</pre> <br> <pre style='white-space:normal;'>";
-//$x=$database->log(); print_r ($x[0]);
-//echo "</pre> <br> rows: <pre >";
-//echo preg_replace (['/SELECT/','/FROM/','/LEFT JOIN/','/ON/','/WHERE/'], ["SELECT\n","\n\nFROM\n","\n\nLEFT JOIN\n","\n\nON\n","\n\nWHERE\n"], $x[0]);
-
 // ------------------------- get cats -------------------
-//$data['band']=$database->select('band','*'); //print_r($database->error());
-//$data['genre']=$database->select('genre','*'); //print_r($database->error());
-//$data['branche']=$database->select('branche','*'); //print_r($database->error());
 
 $data['symbols']['genre']=[
     1=>'♯', // acoustic
@@ -149,7 +142,9 @@ foreach (['','not'] as $pol)
 	}
 }
 
-echo "<pre>"; echo 'getcats:'; print_r ($getcats); echo "</pre>";
+//echo "<pre>"; echo 'getcats:'; @print_r ($getcats); echo "</pre>";
+// ------------------------- output cat form   -------------------
+// ------------------------- output cat form   -------------------
 // ------------------------- output cat form   -------------------
 echo "<form method=\"get\" action=\"index.php\">";
 
@@ -167,7 +162,22 @@ foreach ($props as $p)
 //    echo "<input type=\"hidden\" name=\"$$p\">";
     $propdummy=@$getprops[$p];
     //echo "<div $floatstyle>$p<input type=\"input\" name=\"$p\" value=\"$propdummy\"></div>";
-    echo "$p</td><td style='padding: 4px'><input type=\"input\" name=\"$p\" value=\"$propdummy\">";
+	if ($p=='gender')
+	{
+	  if (!isset ($getprops[$p])) $propdummy=NULL;
+	  else $propdummy=intval ($propdummy);
+
+	  echo "$p</td><td><select name='$p'>
+		  <option value=''  ".($propdummy==NULL?"selected":"").">not set/all</option>
+		  <option value='0' ".($propdummy===0?"selected":"").">Female</option>
+		  <option value='1' ".($propdummy==1?"selected":"").">Male</option>
+		  <option value='2' ".($propdummy==2?"selected":"").">Neither</option>
+		</select>";
+	}
+	else
+	{
+	    echo "$p</td><td style='padding: 4px'><input type=\"input\" name=\"$p\" value=\"$propdummy\">";
+	}
     echo "</td></tr>";
 
 } 
@@ -209,11 +219,6 @@ echo "<button id=\"copyButton\">copy export to clipboard</button><br><br>";
 echo "</form>";
 
 
-//echo 'current mem usage: '.memory_get_usage ()."\n";
-// ------------------------ just read all addresses in --------------------
-$nm['band']=$database->select('nm_band_main', '*', ['ORDER'=>'main_uid']);
-$nm['genre']=$database->select('nm_genre_main', '*', ['ORDER'=>'main_uid']);
-$nm['branche']=$database->select('nm_branche_main', '*', ['ORDER'=>'main_uid']);
 
 //echo "<pre>";print_r ($getprops); echo "</pre>";
 
@@ -226,19 +231,25 @@ if (count ($getprops))
       else
         $where['AND'][$k."[~]"]=$p;
 
-//
+//$where["LIMIT"]=5000;
 //echo "<pre>mergewhere: "; print_r($where); echo "</pre>";
-$rows=$database->select('main', '*', $where);
+
+//$rows=$database->select('main', '*', $where);
+$rows=$database->select('main', [
+'uid','email1','email2','anredename','firma','notiz','sprache'], $where);
+//echo '<br>current mem usage,after select main: '.memory_get_usage ()."\n";
+
+// read the tables----------------------
+// read the tables----------------------
+// read the tables----------------------
 //echo "<small><b>query: </b><pre>".print_r($database->log(),true)."</pre></small>";
 if ($database->error()[0]!=0)
   print_r($database->error());
 
-//print_r($database->error());
 
-//echo "</pre> <br> rows: </pre >";
-//echo "<pre>";
 echo "<h2>results:</h2>";
-//print_r( $rows );
+echo "<pre>legende: ♯ acoustic ★ indie 🔌electro ☉ pop ☥ metal  ♕ hiphop ⚧ LGBT </pre>";
+////print_r( $rows );
 $rowcount=count($rows);
 /*
    [0] => Array
@@ -251,7 +262,6 @@ $rowcount=count($rows);
             [branche_id] => 
             [branche] => 
           )*/
-//echo 'current mem usage: '.memory_get_usage ()."\n";
 // ---------------------------- EVA
 //print_r ($rows); die();
 /*  [0] => Array
@@ -279,6 +289,9 @@ $rowcount=count($rows);
         )
 */
 // ---------------------------- fill data array. process mysql output ------------
+// ---------------------------- fill data array. process mysql output ------------
+// ---------------------------- fill data array. process mysql output ------------
+// ---------------------------- fill data array. process mysql output ------------
 foreach ($rows as $row) // uid
 {
 	$data['main'][$row['uid']]=$row;
@@ -288,6 +301,9 @@ unset ($rows);
 foreach ($categories as $cat)
 {
 //	echo "cat: $cat\n";
+	$nm[$cat]=$database->select("nm_${cat}_main", '*', ['ORDER'=>'main_uid']);
+//	echo "<br>current mem usage,after select nm_${cat}_main:".memory_get_usage ()."\n";
+
 	foreach ($nm[$cat] as $c)
 	{
 //		echo "c: ${c['main_uid']} - ${c[$cat.'_id']}\n";
@@ -296,8 +312,10 @@ foreach ($categories as $cat)
 			$data['main'][$c['main_uid']][$cat][$c[$cat.'_id']]=true;
 		// else ... if we filter the query to main, we get many entries here which we can't put to corresponding entries in data['main']
 	}
-		
+	unset ($nm[$cat]);
+//	echo "<br>current mem usage,after UNSET nm_${cat}_main:".memory_get_usage ()."\n";
 }
+//echo '<br>current mem usage: '.memory_get_usage ()."\n";
 // -------------------------- print the data -----------------------
 //echo "<pre>"; echo 'getcats:'; print_r ($getcats); echo "</pre>";
 

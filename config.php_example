@@ -1,0 +1,5 @@
+<?php
+$config_database_name='';
+$config_password='';
+$config_server='';
+$config_username='';
