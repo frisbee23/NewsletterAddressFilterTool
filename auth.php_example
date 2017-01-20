@@ -1,0 +1,29 @@
+<?php
+//uncomment this block if you want a redirection to https on applicaition level
+// --> alternativly you could do this at webserver level
+//if (empty($_SERVER['HTTPS'])) {
+//    header('Location: https://'.$_SERVER['HTTP_HOST'].'/newsletter/');
+//    exit;
+//}
+
+
+// this is a very basic auth
+// 
+$valid_passwords = array ("admin" => "secret",
+			"user"=> "secret2");
+$valid_users = array_keys($valid_passwords);
+
+$user = $_SERVER['PHP_AUTH_USER'];
+$pass = $_SERVER['PHP_AUTH_PW'];
+
+$validated = (in_array($user, $valid_users)) && ($pass == $valid_passwords[$user]);
+
+if (!$validated) {
+  header('WWW-Authenticate: Basic realm="NAFT authentication"');
+  header('HTTP/1.0 401 Unauthorized');
+  die ("Not authorized");
+}
+
+// If arrives here, is a valid user.
+echo "<p>Welcome $user.</p>";
+
